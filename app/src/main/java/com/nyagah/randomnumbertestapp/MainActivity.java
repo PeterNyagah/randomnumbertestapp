@@ -2,6 +2,7 @@ package com.nyagah.randomnumbertestapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,7 +12,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.nyagah.randomnumbertestapp.entity.WinnerEntity;
+import com.nyagah.randomnumbertestapp.model.WinnerModel;
 
+import java.util.Date;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -50,16 +54,44 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Correct: You got it right!", Toast.LENGTH_LONG).show();
                         Log.i("Random No", "Correct");
 
+                        Date date = new Date();
+                        long timeMilli = date.getTime();
+
+                        saveGameDetails(randomNo, userInput, timeMilli);
                         randomNo = generateRandomNo();
                     } else {
                         Log.i("Random No", "Wrong");
                         Toast.makeText(MainActivity.this, "Wrong guess: Try again! ", Toast.LENGTH_LONG).show();
-//                        https://www.geeksforgeeks.org/how-to-perform-crud-operations-in-room-database-in-android/
+//
                     }
                 }
             }
         });
 
+    }
+
+    private void saveGameDetails(int randomNo, String userInput, long timeMilli) {
+
+        WinnerEntity winnerModel = new WinnerEntity();
+
+        winnerModel.setRandomNo(randomNo);
+        winnerModel.setUserInput(userInput);
+        winnerModel.setTimestamp(timeMilli);
+
+        long previousTimestamp = DatabaseClass.getDatabase(getApplicationContext()).getDao().getTimestamps();
+
+        Date date1 = new Date(previousTimestamp);
+        Date date2 = new Date(timeMilli);
+
+        long timeDiff = date2.getTime() - date1.getTime();
+
+        if (previousTimestamp > 0) {
+            winnerModel.setTimeDifference(timeDiff);
+        }
+
+
+        DatabaseClass.getDatabase(getApplicationContext()).getDao().insertWinnerData(winnerModel);
+        Log.i("Success", "Data stored successfully");
     }
 
     //Generate the random number
